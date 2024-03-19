@@ -1,10 +1,6 @@
-# Fraccionar?
+# Challenge Fraccional
 
-Fraccionar pero en realidad es Fraccional con L al final
-
-El sitio que buscas es https://www.fraccional.cl
-
-¿Creiste que era el código fuente de nosotros? jaja no, pero si te interesa trabajar con nosotros puedes contactarte con Patricio ([@lopezjurip](https://github.com/lopezjurip)).
+Página que muestra el valor de la UF en CLP (pesos chilenos) con sus valores históricos y poder hacer cálculos, simulaciones, etc.
 
 ## Development
 
