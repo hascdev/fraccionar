@@ -1,7 +1,8 @@
-import React, { ChangeEvent, MouseEvent, useCallback, useEffect, useState } from 'react'
+import React, { ChangeEvent, ClipboardEvent, MouseEvent, useCallback, useEffect, useState } from 'react'
 import { getCurrentExchangeRates } from '~/pages/api/exchange_rates';
 import { Exchange_RatesEdge } from '~/types';
 import { toISOStringFormatShort } from '~/utils/date';
+import { validateInputNumber } from '~/utils/number';
 import CalculatorDayValue from './CalculatorDayValue';
 import Calculator from './Calculator';
 
@@ -58,14 +59,11 @@ export default function CalculatorContent() {
   );
 
   const handleChangeResult = useCallback(
-    async (event: ChangeEvent<HTMLInputElement>) => {
+    (event: ChangeEvent<HTMLInputElement>) => {
       event.preventDefault();
 
       const { value } = event.target;
-      //console.log("value", value);
-
-      const value_numeric = validateInputNumber(value);
-      //console.log("value_numeric", value_numeric);
+      const value_numeric = validateInputNumber(value);      
       setCalcValue(value_numeric);
 
       if (operator === Operators.multiplicar) {
@@ -78,7 +76,7 @@ export default function CalculatorContent() {
   );
 
   const toExchange = useCallback(
-    async (event: MouseEvent<HTMLButtonElement>) => {
+    (event: MouseEvent<HTMLButtonElement>) => {
       event.preventDefault();
 
       const last_result = validateInputNumber(resultValue.toFixed(2).replaceAll(".", ","));  
@@ -91,16 +89,11 @@ export default function CalculatorContent() {
     }, [calcValue, resultValue]
   );
 
-  const validateInputNumber = (input: any) => {
-
-    var regex = /^\d+[,]?\d{0,2}$/;
-
-    if (regex.test(input)) {
-      return input;
-    } else {
-      return input.substring(0, input.length - 1);
-    }
-  }
+  const onPaste = (event: ClipboardEvent<HTMLInputElement>) => {
+    event.preventDefault();
+    const value = event.clipboardData.getData('Text');
+    setCalcValue(validateInputNumber(value));
+  };
 
   return (
     <>

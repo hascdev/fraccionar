@@ -5,8 +5,8 @@ type Props = {
   edge: Exchange_RatesEdge | undefined;
   calcValue: number;
   resultValue: number;
-  handleChangeResult: (event: ChangeEvent<HTMLInputElement>) => Promise<void>;
-  toExchange: (event: MouseEvent<HTMLButtonElement>) => Promise<void>;
+  handleChangeResult: (event: ChangeEvent<HTMLInputElement>) => void;
+  toExchange: (event: MouseEvent<HTMLButtonElement>) => void;
 };
 
 export default function Calculator(props: Props) {

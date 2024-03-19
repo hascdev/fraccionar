@@ -36,7 +36,7 @@ export async function getCurrentExchangeRates(pair_at: string) : Promise<Data> {
 
     //console.log('response', response);
     const { data } = await response.json();
-    console.log('getCurrentExchangeRates', data);
+    //console.log('getCurrentExchangeRates', data);
     return data;
 
   } catch (error) {
@@ -86,7 +86,7 @@ export async function getExchangeRates(pair_at: string, before?: Maybe<Scalars['
 
     //console.log('response', response);
     const { data } = await response.json();
-    console.log('getExchangeRates', data);
+    //console.log('getExchangeRates', data);
     return data;
 
   } catch (error) {
