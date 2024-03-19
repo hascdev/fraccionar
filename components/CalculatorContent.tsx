@@ -7,7 +7,7 @@ import CalculatorDayValue from './CalculatorDayValue';
 import Calculator from './Calculator';
 
 enum Operators {
-  multiplicar, dividir 
+  multiplicar, dividir
 }
 
 export default function CalculatorContent() {
@@ -54,7 +54,7 @@ export default function CalculatorContent() {
         const new_calc = resultValue * Number(current_edge?.node.pair_numeric);
         setCalcValue(validateInputNumber(new_calc.toFixed(2).replaceAll(".", ",")));
       }
-      
+
     }, [calcValue, resultValue, operator]
   );
 
@@ -63,7 +63,7 @@ export default function CalculatorContent() {
       event.preventDefault();
 
       const { value } = event.target;
-      const value_numeric = validateInputNumber(value);      
+      const value_numeric = validateInputNumber(value);
       setCalcValue(value_numeric);
 
       if (operator === Operators.multiplicar) {
@@ -79,7 +79,7 @@ export default function CalculatorContent() {
     (event: MouseEvent<HTMLButtonElement>) => {
       event.preventDefault();
 
-      const last_result = validateInputNumber(resultValue.toFixed(2).replaceAll(".", ","));  
+      const last_result = validateInputNumber(resultValue.toFixed(2).replaceAll(".", ","));
       const last_calc = calcValue.toString().replaceAll(",", ".");
 
       setCalcValue(last_result);
@@ -89,25 +89,33 @@ export default function CalculatorContent() {
     }, [calcValue, resultValue]
   );
 
-  const onPaste = (event: ClipboardEvent<HTMLInputElement>) => {
-    event.preventDefault();
-    const value = event.clipboardData.getData('Text');
-    setCalcValue(validateInputNumber(value));
-  };
+  const onPaste = useCallback(
+    (event: ClipboardEvent<HTMLInputElement>) => {
+      event.preventDefault();
+      let value: any = event.clipboardData.getData('Text');
+      var regex = /^\d+[,]?\d{0,2}$/;
+      if (regex.test(value)) {
+        document.execCommand('insertText', false, value);
+      } else {
+        document.execCommand('insertText', false, "");
+      }
+    }, []
+  );
 
   return (
     <>
-      <CalculatorDayValue 
-        edge={edge} 
-        selectedDate={selectedDate} 
+      <CalculatorDayValue
+        edge={edge}
+        selectedDate={selectedDate}
         handleChangeDate={handleChangeDate} />
 
-      <Calculator 
-        edge={edge} 
-        calcValue={calcValue} 
-        resultValue={resultValue} 
+      <Calculator
+        edge={edge}
+        calcValue={calcValue}
+        resultValue={resultValue}
         handleChangeResult={handleChangeResult}
-        toExchange={toExchange} />
+        toExchange={toExchange}
+        onPaste={onPaste} />
     </>
   )
 }

@@ -1,4 +1,4 @@
-import React, { ChangeEvent, MouseEvent, useCallback, useRef, useState } from 'react'
+import React, { ChangeEvent, ClipboardEvent, MouseEvent, useRef } from 'react'
 import { Exchange_RatesEdge } from '~/types';
 
 type Props = {
@@ -7,11 +7,12 @@ type Props = {
   resultValue: number;
   handleChangeResult: (event: ChangeEvent<HTMLInputElement>) => void;
   toExchange: (event: MouseEvent<HTMLButtonElement>) => void;
+  onPaste: (event: ClipboardEvent<HTMLInputElement>) => void;
 };
 
 export default function Calculator(props: Props) {
 
-  const { edge, calcValue, resultValue, handleChangeResult, toExchange } = props;
+  const { edge, calcValue, resultValue, handleChangeResult, toExchange, onPaste } = props;
 
   const leftTitle = useRef<string>("UF (CLF)");
   const rightTitle = useRef<string>("Pesos (CLP)");
@@ -38,7 +39,7 @@ export default function Calculator(props: Props) {
         <div className="col-span-2">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{leftTitle.current}</label>
           <div className="mt-1">
-            <input type="text" className="input input-4 sm:input-3 input-skin w-full" value={calcValue} onChange={handleChangeResult}></input>
+            <input type="text" className="input input-4 sm:input-3 input-skin w-full" value={calcValue} onChange={handleChangeResult} onPaste={onPaste}></input>
           </div>
         </div>
 
