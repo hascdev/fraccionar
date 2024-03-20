@@ -46,7 +46,7 @@ export default function Calculator(props: Props) {
     <>
       <h5 className="mt-12 block text-xl font-medium text-gray-900 dark:text-gray-100">Calculadora de {leftTitle.current} a {rightTitle.current}</h5>
 
-      <div aria-description="Selector de unidades dentro del proyecto" className="mt-6 grid grid-cols-5 gap-2">
+      <div aria-description="Calculadora de UF (CLF) a Pesos (CLP)" className="mt-6 grid grid-cols-5 gap-2">
 
         <div className="col-span-2">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{leftTitle.current}</label>
