@@ -1,4 +1,5 @@
-import { ChangeEvent } from 'react'
+import { ChangeEvent, useCallback, useEffect, useState } from 'react'
+import { getRangeExchangeRates } from '~/pages/api/exchange_rates';
 import { Exchange_RatesEdge } from '~/types';
 import { getReadableDateFormat } from '~/utils/date'
 
@@ -12,11 +13,32 @@ export default function CalculatorDayValue(props: Props) {
 
   const { edge, selectedDate, handleChangeDate } = props;
 
+  const [rangeDate, setRangeDate] = useState({ min: "", max: "" });
+
+  const initData = useCallback(async () => {
+
+    const { exchange_rates_first, exchange_rates_last } = await getRangeExchangeRates();
+    
+    setRangeDate({
+      min: exchange_rates_first.edges[0]?.node.pair_at ?? "",
+      max: exchange_rates_last.edges[0]?.node.pair_at ?? ""
+    });
+
+  }, []);
+
+  useEffect(() => {
+    initData();
+  }, [initData]);
+
   return (
     <>
       <div aria-description="Selector de fecha" className="mt-12 relative w-full">
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Prueba con distintas fechas</label>
-        <input id="date" name="date" type="date" className="mt-1 input input-4 sm:input-3 input-skin w-full sm:max-w-xs" onChange={handleChangeDate} defaultValue={selectedDate}></input>
+        <input id="date" name="date" type="date" className="mt-1 input input-4 sm:input-3 input-skin w-full sm:max-w-xs" 
+          onChange={handleChangeDate} 
+          defaultValue={selectedDate}
+          min={rangeDate.min}
+          max={rangeDate.max} />
       </div>
 
       <div aria-description="Valor de la UF" className="mt-6 relative w-full">

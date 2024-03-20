@@ -76,6 +76,11 @@ export type Data = {
     exchange_rates: Exchange_RatesConnection;
 }
 
+export type RangeData = {
+    exchange_rates_first: Exchange_RatesConnection;
+    exchange_rates_last: Exchange_RatesConnection;
+}
+
 export type Exchange_RatesEdge_Month = {
     title: string;
     date: string;
