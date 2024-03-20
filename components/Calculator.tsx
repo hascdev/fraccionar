@@ -1,4 +1,4 @@
-import React, { ChangeEvent, ClipboardEvent, MouseEvent, useRef } from 'react'
+import React, { ChangeEvent, ClipboardEvent, MouseEvent, useCallback, useRef } from 'react'
 import { Exchange_RatesEdge } from '~/types';
 
 type Props = {
@@ -7,12 +7,11 @@ type Props = {
   resultValue: number;
   handleChangeResult: (event: ChangeEvent<HTMLInputElement>) => void;
   toExchange: (event: MouseEvent<HTMLButtonElement>) => void;
-  onPaste: (event: ClipboardEvent<HTMLInputElement>) => void;
 };
 
 export default function Calculator(props: Props) {
 
-  const { edge, calcValue, resultValue, handleChangeResult, toExchange, onPaste } = props;
+  const { edge, calcValue, resultValue, handleChangeResult, toExchange } = props;
 
   const leftTitle = useRef<string>("UF (CLF)");
   const rightTitle = useRef<string>("Pesos (CLP)");
@@ -29,6 +28,19 @@ export default function Calculator(props: Props) {
 
     toExchange(event);
   }
+
+  const onPaste = useCallback(
+    (event: ClipboardEvent<HTMLInputElement>) => {
+      event.preventDefault();
+      let value: any = event.clipboardData.getData('Text');
+      var regex = /^\d+[,]?\d{0,2}$/;
+      if (regex.test(value)) {
+        document.execCommand('insertText', false, value);
+      } else {
+        document.execCommand('insertText', false, "");
+      }
+    }, []
+  );
 
   return (
     <>

@@ -1,8 +1,8 @@
-import React, { ChangeEvent, ClipboardEvent, MouseEvent, useCallback, useEffect, useState } from 'react'
+import { ChangeEvent, MouseEvent, useCallback, useEffect, useState } from 'react'
 import { getCurrentExchangeRates } from '~/pages/api/exchange_rates';
 import { Exchange_RatesEdge } from '~/types';
 import { toISOStringFormatShort } from '~/utils/date';
-import { validateInputNumber } from '~/utils/number';
+import { truncateNumber, validateInputNumber } from '~/utils/number';
 import CalculatorDayValue from './CalculatorDayValue';
 import Calculator from './Calculator';
 
@@ -49,9 +49,11 @@ export default function CalculatorContent() {
       //console.log("calcValue", calcValue, "resultValue", resultValue);
       if (operator === Operators.multiplicar) {
         const new_result = calcValue * Number(current_edge?.node.pair_numeric);
+        //console.log("new_result", new_result);
         setResultValue(Number(new_result.toFixed(2)));
       } else {
         const new_calc = resultValue * Number(current_edge?.node.pair_numeric);
+        //console.log("new_calc", new_calc);
         setCalcValue(validateInputNumber(new_calc.toFixed(2).replaceAll(".", ",")));
       }
 
@@ -65,16 +67,26 @@ export default function CalculatorContent() {
       const { value } = event.target;
       const value_numeric = validateInputNumber(value);
       setCalcValue(value_numeric);
-
+      
       if (operator === Operators.multiplicar) {
+
         setResultValue(Number(value_numeric.replaceAll(",", ".")) * Number(edge?.node.pair_numeric));
+
       } else {
-        setResultValue(Number(value_numeric.replaceAll(",", ".")) / Number(edge?.node.pair_numeric));
+        
+        let new_result = Number(value_numeric.replaceAll(",", ".")) / Number(edge?.node.pair_numeric);
+        
+        // Truncate when new_result == 0.996
+        if (new_result < 1 && new_result.toFixed(2) === '1.00') {
+          new_result = truncateNumber(new_result, 2); 
+        }
+
+        setResultValue(new_result);
       }
 
     }, [edge, operator]
   );
-
+  
   const toExchange = useCallback(
     (event: MouseEvent<HTMLButtonElement>) => {
       event.preventDefault();
@@ -84,22 +96,9 @@ export default function CalculatorContent() {
 
       setCalcValue(last_result);
       setResultValue(Number(last_calc));
-      setOperator(Operators.dividir);
+      setOperator(operator === Operators.multiplicar ? Operators.dividir : Operators.multiplicar);
 
-    }, [calcValue, resultValue]
-  );
-
-  const onPaste = useCallback(
-    (event: ClipboardEvent<HTMLInputElement>) => {
-      event.preventDefault();
-      let value: any = event.clipboardData.getData('Text');
-      var regex = /^\d+[,]?\d{0,2}$/;
-      if (regex.test(value)) {
-        document.execCommand('insertText', false, value);
-      } else {
-        document.execCommand('insertText', false, "");
-      }
-    }, []
+    }, [calcValue, resultValue, operator]
   );
 
   return (
@@ -114,8 +113,7 @@ export default function CalculatorContent() {
         calcValue={calcValue}
         resultValue={resultValue}
         handleChangeResult={handleChangeResult}
-        toExchange={toExchange}
-        onPaste={onPaste} />
+        toExchange={toExchange} />
     </>
   )
 }
