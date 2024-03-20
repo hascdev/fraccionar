@@ -84,7 +84,6 @@ export type RangeData = {
 export type Exchange_RatesEdge_Month = {
     title: string;
     date: string;
-    endCursor?: Maybe<Scalars['String']['output']>;
     edges: Array<Exchange_RatesEdge>;
 };
 

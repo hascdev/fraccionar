@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
 import MonthTable from './MonthTable'
-import { Exchange_RatesEdge_Grouped, Exchange_RatesEdge_Month } from '~/types';
+import { Exchange_RatesEdge_Grouped, Exchange_RatesEdge_Month, PageInfo } from '~/types';
 import { getDateFromISOString, getMonthYearFormat, toISOStringFormatShort } from '~/utils/date';
-import { getExchangeRates } from '~/pages/api/exchange_rates';
+import { getNextExchangeRates, getPrevExchangeRates } from '~/pages/api/exchange_rates';
 
 export default function MonthTableContent() {
 
   const [prev, setPrev] = useState<Exchange_RatesEdge_Month>();
   const [next, setNext] = useState<Exchange_RatesEdge_Month>();
+  const [pageTableInfo, setPageTableInfo] = useState<PageInfo>({ hasPreviousPage: true, hasNextPage: false });
 
   const initData = useCallback(async () => {
 
@@ -15,8 +16,12 @@ export default function MonthTableContent() {
     first_date_month.setDate(1);
     const pair_at = toISOStringFormatShort(first_date_month);
 
-    const { exchange_rates } = await getExchangeRates(pair_at);
-    const endCursor = exchange_rates.pageInfo.endCursor;
+    first_date_month.setMonth(first_date_month.getMonth() + 2);
+    const before = '["' + toISOStringFormatShort(first_date_month) + '"]';
+    const encode_before = btoa(before);
+    //console.log("before", before, "encode_before", encode_before);
+
+    const { exchange_rates } = await getNextExchangeRates(pair_at, encode_before);
 
     let idx = 0;
     const rates_edge_gruped: Exchange_RatesEdge_Grouped = exchange_rates.edges.reduce((group: Exchange_RatesEdge_Grouped, edge) => {
@@ -29,7 +34,7 @@ export default function MonthTableContent() {
       if (index !== -1) {
         group[index]?.edges.push(edge);
       } else {
-        group[idx] = { title, date: node.pair_at, endCursor, edges: [] };
+        group[idx] = { title, date: node.pair_at, edges: [] };
         group[idx++]?.edges.push(edge);
       }
 
@@ -48,18 +53,27 @@ export default function MonthTableContent() {
 
   const prevMonth = useCallback(
 
-    async (date: string, before: any) => {
+    async (from_date_str: string) => {
 
       try {
 
         setNext(prev);
-        const prev_date = getDateFromISOString(date);
-        prev_date.setMonth(prev_date.getMonth() - 1);
-        const prev_pair_at = toISOStringFormatShort(prev_date);
-        const { exchange_rates } = await getExchangeRates(prev_pair_at, before);
-        const title = getMonthYearFormat(prev_date);
-        const endCursor = exchange_rates.pageInfo.endCursor;
-        setPrev({ title, date: prev_pair_at, endCursor, edges: exchange_rates.edges });
+
+        const after_date = getDateFromISOString(from_date_str);
+        after_date.setMonth(after_date.getMonth() - 1);
+        const title = getMonthYearFormat(after_date);
+        const date = toISOStringFormatShort(after_date);
+
+        after_date.setDate(after_date.getDate() - 1);
+        const after = '["' + toISOStringFormatShort(after_date) + '"]';
+        const encode_after = btoa(after);
+        //console.log("after", after, "encode_after", encode_after);
+
+        const { exchange_rates: { edges, pageInfo } } = await getPrevExchangeRates(from_date_str, encode_after);
+        //console.log("edges", edges);
+
+        setPrev({ title, date, edges });
+        setPageTableInfo({ hasPreviousPage: pageInfo.hasPreviousPage, hasNextPage: true });
 
       } catch (error) {
         console.error('prevMonth', error);
@@ -69,17 +83,26 @@ export default function MonthTableContent() {
 
   const nextMonth = useCallback(
 
-    async (date: string, before: any) => {
+    async (to_date_str: string) => {
 
       try {
 
         setPrev(next);
-        const next_date = getDateFromISOString(date);
-        next_date.setMonth(next_date.getMonth() + 1);
-        const next_pair_at = toISOStringFormatShort(next_date);
-        const { exchange_rates } = await getExchangeRates(next_pair_at, before);
-        const title = getMonthYearFormat(next_date);
-        setNext({ title, date: next_pair_at, edges: exchange_rates.edges });
+
+        const before_date = getDateFromISOString(to_date_str);
+        before_date.setMonth(before_date.getMonth() + 1);
+        const title = getMonthYearFormat(before_date);
+        const date = toISOStringFormatShort(before_date);
+
+        before_date.setMonth(before_date.getMonth() + 1);
+        const before = '["' + toISOStringFormatShort(before_date) + '"]';
+        const encode_before = btoa(before);
+        //console.log("before", before, "encode_before", encode_before);
+
+        const { exchange_rates: { edges, pageInfo } } = await getNextExchangeRates(date, encode_before);
+        
+        setNext({ title, date, edges });
+        setPageTableInfo({ hasPreviousPage: true, hasNextPage: pageInfo.hasNextPage });
 
       } catch (error) {
         console.error('nextMonth', error);
@@ -97,7 +120,7 @@ export default function MonthTableContent() {
             <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
               <div className="flex items-center">
                 <div className="mr-4">
-                  <button type="button" className="btn btn-outline-skin btn-1 btn-rounded btn-shadow" onClick={() => prevMonth(prev?.date ?? "", prev?.endCursor)}>
+                  <button type="button" className={`btn btn-outline-skin btn-1 btn-rounded btn-shadow ${!pageTableInfo.hasPreviousPage && 'invisible'}`} onClick={() => prevMonth(prev?.date ?? "")}>
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-6 flex-shrink-0">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
                     </svg>
@@ -115,7 +138,7 @@ export default function MonthTableContent() {
                   <h1 className="text-base text-center font-semibold capitalize leading-6 text-gray-700 dark:text-gray-300">{next?.title}</h1>
                 </div>
                 <div className="ml-4">
-                  <button type="button" className="btn btn-outline-skin btn-1 btn-rounded btn-shadow" onClick={() => nextMonth(next?.date ?? "", next?.endCursor)}>
+                  <button type="button" className={`btn btn-outline-skin btn-1 btn-rounded btn-shadow ${!pageTableInfo.hasNextPage && 'invisible'}`} onClick={() => nextMonth(next?.date ?? "")}>
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-6 h-6">
                       <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
                     </svg>
