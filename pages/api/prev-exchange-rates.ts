@@ -18,7 +18,7 @@ export default async function handler( req: NextApiRequest, res: NextApiResponse
     const response = await fetch("https://api.fraccional.app/graphql/v1", {
       method: "POST",
       headers: {
-        'apiKey': process.env.NEXT_PUBLIC_API_KEY ?? '',
+        'apiKey': process.env.API_KEY ?? '',
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
