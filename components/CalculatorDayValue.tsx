@@ -1,5 +1,4 @@
 import { ChangeEvent, useCallback, useEffect, useState } from 'react'
-import { getRangeExchangeRates } from '~/pages/api/exchange_rates';
 import { Exchange_RatesEdge } from '~/types';
 import { getReadableDateFormat } from '~/utils/date'
 
@@ -17,12 +16,22 @@ export default function CalculatorDayValue(props: Props) {
 
   const initData = useCallback(async () => {
 
-    const { exchange_rates_first, exchange_rates_last } = await getRangeExchangeRates();
-    
-    setRangeDate({
-      min: exchange_rates_first.edges[0]?.node.pair_at ?? "",
-      max: exchange_rates_last.edges[0]?.node.pair_at ?? ""
+    const response = await fetch('/api/range-exchange-rates', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      }
     });
+
+    if (response.ok) {
+
+      const { exchange_rates_first, exchange_rates_last } = await response.json();
+      
+      setRangeDate({
+        min: exchange_rates_first.edges[0]?.node.pair_at ?? "",
+        max: exchange_rates_last.edges[0]?.node.pair_at ?? ""
+      });
+    }
 
   }, []);
 

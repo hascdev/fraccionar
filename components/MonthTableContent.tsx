@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import MonthTable from './MonthTable'
-import { Exchange_RatesEdge_Grouped, Exchange_RatesEdge_Month, PageInfo } from '~/types';
+import { Exchange_RatesEdge, Exchange_RatesEdge_Grouped, Exchange_RatesEdge_Month, PageInfo } from '~/types';
 import { getDateFromISOString, getMonthYearFormat, toISOStringFormatShort } from '~/utils/date';
-import { getNextExchangeRates, getPrevExchangeRates } from '~/pages/api/exchange_rates';
 
 export default function MonthTableContent() {
 
@@ -21,29 +20,42 @@ export default function MonthTableContent() {
     const encode_before = btoa(before);
     //console.log("before", before, "encode_before", encode_before);
 
-    const { exchange_rates } = await getNextExchangeRates(pair_at, encode_before);
+    const response = await fetch('/api/next-exchange-rates', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ "to_date": pair_at, "before": encode_before }),
+    });
 
-    let idx = 0;
-    const rates_edge_gruped: Exchange_RatesEdge_Grouped = exchange_rates.edges.reduce((group: Exchange_RatesEdge_Grouped, edge) => {
+    if (response.ok) {
 
-      const { node } = edge;
-      const local_date = getDateFromISOString(node.pair_at);
-      const title = getMonthYearFormat(local_date);
+      const { exchange_rates } = await response.json();
+      //console.log("exchange_rates", exchange_rates);
 
-      const index = group.findIndex(month => month?.title === title);
-      if (index !== -1) {
-        group[index]?.edges.push(edge);
-      } else {
-        group[idx] = { title, date: node.pair_at, edges: [] };
-        group[idx++]?.edges.push(edge);
-      }
+      let idx = 0;
+      const rates_edge_gruped: Exchange_RatesEdge_Grouped = exchange_rates.edges.reduce((group: Exchange_RatesEdge_Grouped, edge: Exchange_RatesEdge) => {
 
-      return group;
+        const { node } = edge;
+        const local_date = getDateFromISOString(node.pair_at);
+        const title = getMonthYearFormat(local_date);
 
-    }, []);
+        const index = group.findIndex(month => month?.title === title);
+        if (index !== -1) {
+          group[index]?.edges.push(edge);
+        } else {
+          group[idx] = { title, date: node.pair_at, edges: [] };
+          group[idx++]?.edges.push(edge);
+        }
 
-    setPrev(rates_edge_gruped[0]);
-    setNext(rates_edge_gruped[1]);
+        return group;
+
+      }, []);
+
+      setPrev(rates_edge_gruped[0]);
+      setNext(rates_edge_gruped[1]);
+
+    }
 
   }, []);
 
@@ -69,11 +81,22 @@ export default function MonthTableContent() {
         const encode_after = btoa(after);
         //console.log("after", after, "encode_after", encode_after);
 
-        const { exchange_rates: { edges, pageInfo } } = await getPrevExchangeRates(from_date_str, encode_after);
-        //console.log("edges", edges);
+        const response = await fetch('/api/prev-exchange-rates', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ "from_date": from_date_str, "after": encode_after })
+        });
 
-        setPrev({ title, date, edges });
-        setPageTableInfo({ hasPreviousPage: pageInfo.hasPreviousPage, hasNextPage: true });
+        if (response.ok) {
+
+          const { exchange_rates: { edges, pageInfo } } = await response.json();
+          //console.log("edges", edges);
+
+          setPrev({ title, date, edges });
+          setPageTableInfo({ hasPreviousPage: pageInfo.hasPreviousPage, hasNextPage: true });
+        }
 
       } catch (error) {
         console.error('prevMonth', error);
@@ -99,10 +122,21 @@ export default function MonthTableContent() {
         const encode_before = btoa(before);
         //console.log("before", before, "encode_before", encode_before);
 
-        const { exchange_rates: { edges, pageInfo } } = await getNextExchangeRates(date, encode_before);
-        
-        setNext({ title, date, edges });
-        setPageTableInfo({ hasPreviousPage: true, hasNextPage: pageInfo.hasNextPage });
+        const response = await fetch('/api/next-exchange-rates', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ "to_date": date, "before": encode_before }),
+        });
+    
+        if (response.ok) {
+          
+          const { exchange_rates: { edges, pageInfo } } = await response.json();
+  
+          setNext({ title, date, edges });
+          setPageTableInfo({ hasPreviousPage: true, hasNextPage: pageInfo.hasNextPage });
+        }
 
       } catch (error) {
         console.error('nextMonth', error);

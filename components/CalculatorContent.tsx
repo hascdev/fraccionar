@@ -1,5 +1,4 @@
 import { ChangeEvent, MouseEvent, useCallback, useEffect, useState } from 'react'
-import { getCurrentExchangeRates } from '~/pages/api/exchange_rates';
 import { Exchange_RatesEdge } from '~/types';
 import { toISOStringFormatShort } from '~/utils/date';
 import { truncateNumber, validateInputNumber } from '~/utils/number';
@@ -21,13 +20,25 @@ export default function CalculatorContent() {
   const initData = useCallback(async () => {
 
     const current_date = toISOStringFormatShort(new Date());
-    const { exchange_rates: { edges } } = await getCurrentExchangeRates(current_date);
 
-    setSelectedDate(current_date);
-    const current_edge = edges[0];
-    setEdge(current_edge);
-    setCalcValue(1)
-    setResultValue(1 * Number(current_edge?.node.pair_numeric));
+    const response = await fetch('/api/current-exchange-rate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ "pair_at": current_date })
+    });
+
+    if (response.ok) {
+
+      const { exchange_rates: { edges } } = await response.json();
+  
+      setSelectedDate(current_date);
+      const current_edge = edges[0];
+      setEdge(current_edge);
+      setCalcValue(1)
+      setResultValue(1 * Number(current_edge?.node.pair_numeric));
+    }
 
   }, []);
 
@@ -40,21 +51,33 @@ export default function CalculatorContent() {
       event.preventDefault();
 
       const { value } = event.target;
-      const { exchange_rates: { edges } } = await getCurrentExchangeRates(value);
 
-      setSelectedDate(value);
-      const current_edge = edges[0];
-      setEdge(current_edge);
+      const response = await fetch('/api/current-exchange-rate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ "pair_at": value })
+      });
+  
+      if (response.ok) {
 
-      //console.log("calcValue", calcValue, "resultValue", resultValue);
-      if (operator === Operators.multiplicar) {
-        const new_result = calcValue * Number(current_edge?.node.pair_numeric);
-        //console.log("new_result", new_result);
-        setResultValue(Number(new_result.toFixed(2)));
-      } else {
-        const new_calc = resultValue * Number(current_edge?.node.pair_numeric);
-        //console.log("new_calc", new_calc);
-        setCalcValue(validateInputNumber(new_calc.toFixed(2).replaceAll(".", ",")));
+        const { exchange_rates: { edges } } = await response.json();
+  
+        setSelectedDate(value);
+        const current_edge = edges[0];
+        setEdge(current_edge);
+  
+        //console.log("calcValue", calcValue, "resultValue", resultValue);
+        if (operator === Operators.multiplicar) {
+          const new_result = calcValue * Number(current_edge?.node.pair_numeric);
+          //console.log("new_result", new_result);
+          setResultValue(Number(new_result.toFixed(2)));
+        } else {
+          const new_calc = resultValue * Number(current_edge?.node.pair_numeric);
+          //console.log("new_calc", new_calc);
+          setCalcValue(validateInputNumber(new_calc.toFixed(2).replaceAll(".", ",")));
+        }
       }
 
     }, [calcValue, resultValue, operator]
