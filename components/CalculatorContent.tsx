@@ -16,8 +16,11 @@ export default function CalculatorContent() {
   const [calcValue, setCalcValue] = useState<number>(1);
   const [resultValue, setResultValue] = useState<number>(0);
   const [operator, setOperator] = useState<Operators>(Operators.multiplicar);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const initData = useCallback(async () => {
+
+    setIsLoading(true);
 
     const current_date = toISOStringFormatShort(new Date());
 
@@ -39,6 +42,8 @@ export default function CalculatorContent() {
       setCalcValue(1)
       setResultValue(1 * Number(current_edge?.node.pair_numeric));
     }
+
+    setIsLoading(false);
 
   }, []);
 
@@ -123,6 +128,8 @@ export default function CalculatorContent() {
 
     }, [calcValue, resultValue, operator]
   );
+
+  if (isLoading) return (<p className='mt-2 text-sm'>Cargando...</p>)
 
   return (
     <>
