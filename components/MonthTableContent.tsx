@@ -149,7 +149,7 @@ export default function MonthTableContent() {
       <h5 className="mt-12 block text-xl font-medium text-gray-900 dark:text-gray-100">Valores de UF (CLF) por mes y año</h5>
 
       <div aria-description="Valores de UF (CLF) por mes y año" className="mt-6 flow-root">
-        <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+        <div className="-my-2 overflow-x-auto lg:-mx-8">
           <div className="md:grid md:grid-cols-2 md:items-start md:gap-x-10 relative">
             <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
               <div className="flex items-center">
