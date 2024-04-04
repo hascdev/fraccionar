@@ -15,7 +15,7 @@ export default function MonthTable(props: Props) {
           <th scope="col" className="whitespace-nowrap py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 sm:pl-0">Fecha</th>
           <th scope="col" className="whitespace-nowrap px-2 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Valor</th>
           <th scope="col" className="relative whitespace-nowrap py-3.5 pl-3 pr-4 sm:pr-0">
-            <span className="sr-only">Edit</span>
+            <span className="sr-only">Copiar</span>
           </th>
         </tr>
       </thead>
